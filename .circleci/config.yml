@@ -1,0 +1,48 @@
+version: 2.1
+executors:
+  react-native-executor:
+    docker:
+      - image: circleci/node:18-browsers
+
+jobs:
+  install_dependencies:
+    executor: react-native-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: yarn install
+
+  android_build:
+    executor: react-native-executor
+    steps:
+      - checkout
+      - run:
+          name: Build Android
+          command: |
+            bundle install
+            bundle exec fastlane develop
+
+  ios_build:
+    executor: react-native-executor
+    steps:
+      - checkout
+      - run:
+          name: Install CocoaPods and Build iOS
+          command: |
+            gem install bundler
+            bundle install
+            cd ios
+            bundle exec fastlane develop
+
+workflows:
+  version: 2
+  build_and_publish:
+    jobs:
+      - install_dependencies
+      - android_build:
+          requires:
+            - install_dependencies
+      - ios_build:
+          requires:
+            - install_dependencies
